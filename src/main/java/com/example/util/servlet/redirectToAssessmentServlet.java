@@ -1,5 +1,10 @@
 package com.example.util.servlet;
 
+import com.google.api.core.ApiFuture;
+import com.google.cloud.firestore.DocumentReference;
+import com.google.cloud.firestore.DocumentSnapshot;
+import com.google.cloud.firestore.Firestore;
+import com.google.firebase.cloud.FirestoreClient;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -8,12 +13,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
-
-import com.google.cloud.firestore.DocumentSnapshot;
-import com.google.cloud.firestore.Firestore;
-import com.google.firebase.cloud.FirestoreClient;
 
 @WebServlet("/redirectToAssessment")
 public class redirectToAssessmentServlet extends HttpServlet {
@@ -26,55 +29,87 @@ public class redirectToAssessmentServlet extends HttpServlet {
         String activityId = request.getParameter("activityId");
         String[] focuses = request.getParameterValues("focuses");
 
-        System.out.println("studentId: " + studentId);
-        System.out.println("activityId: " + activityId);
-        System.out.println("focuses: " + Arrays.toString(focuses));
+        System.out.println("studentId = " + studentId);
+        System.out.println("activityId = " + activityId);
+        System.out.println("focuses = " + Arrays.toString(focuses));
 
-        if (studentId == null || studentId.trim().isEmpty() ||
-            activityId == null || activityId.trim().isEmpty() ||
-            focuses == null || focuses.length == 0) {
-
-            System.out.println("🚫 Missing input, redirecting to error.html");
+        if (studentId == null || activityId == null || focuses == null || focuses.length == 0) {
             response.sendRedirect("error.html");
             return;
         }
 
-        // Continue with redirect logic
-        HttpSession session = request.getSession(true);
-        session.setAttribute("studentId", studentId);
-        session.setAttribute("activityId", activityId);
-        session.setAttribute("focuses", Arrays.asList(focuses));
-        session.setAttribute("assessmentIndex", 0);
-
         try {
             Firestore db = FirestoreClient.getFirestore();
-            DocumentSnapshot doc = db.collection("student").document(studentId).get().get();
-            if (doc.exists()) {
-                String fullName = doc.getString("fullName");
-                session.setAttribute("fullName", fullName);
+
+            // Fetch student data
+            DocumentSnapshot studentDoc = db.collection("student").document(studentId).get().get();
+            String fullName = studentDoc.getString("fullName");
+            Long ageLong = studentDoc.getLong("age");
+            int age = (ageLong != null) ? ageLong.intValue() : 0;
+
+            // Determine age range for criteria
+            String ageRange = (age <= 6) ? "0-6months" : (age <= 12) ? "6-12months" : "2-3years";
+
+            // Fetch criteria data
+            //DocumentSnapshot criteriaDoc = db.collection("criteria").document(ageRange).get().get();
+            //List<String> literacyList = (List<String>) criteriaDoc.get("literacyList");
+            //List<String> physicalList = (List<String>) criteriaDoc.get("physicalList");
+            List<String> focusList = Arrays.asList(focuses);
+
+            if (focusList.contains("physical")) {
+                DocumentReference criteriaRef = db.collection("criteria").document(ageRange);
+                ApiFuture<DocumentSnapshot> criteriaFuture = criteriaRef.get();
+                DocumentSnapshot criteriaDoc = criteriaFuture.get();
+    
+                if (criteriaDoc.exists()) {
+                    List<String> psychomotorList = (List<String>) criteriaDoc.get("psychomotorList");
+                    request.setAttribute("psychomotorList", psychomotorList);
+                }
             }
+            if (focusList.contains("literacy")) {
+                DocumentReference criteriaRef = db.collection("criteria").document(ageRange);
+                ApiFuture<DocumentSnapshot> criteriaFuture = criteriaRef.get();
+                DocumentSnapshot criteriaDoc = criteriaFuture.get();
+    
+                if (criteriaDoc.exists()) {
+                    List<String> literacyList = (List<String>) criteriaDoc.get("literacyList");
+                    request.setAttribute("literacyList", literacyList);
+                }
+            }
+
+
+            // Fetch activity details
+            DocumentSnapshot activityDoc = db.collection("dailyActivities").document(activityId).get().get();
+            String activityName = activityDoc.getString("name");
+            String activityDescription = activityDoc.getString("description");
+            String activityDate = activityDoc.getString("date");
+
+            // Set session attributes
+            HttpSession session = request.getSession(true);
+            session.setAttribute("studentId", studentId);
+            session.setAttribute("activityId", activityId);
+            session.setAttribute("focusArray", Arrays.asList(focuses));
+            session.setAttribute("assessmentIndex", 0);
+
+            // Set request attributes for progress.jsp
+            request.setAttribute("studentId", studentId);
+            request.setAttribute("fullName", fullName);
+            request.setAttribute("age", age);
+            request.setAttribute("focuses", focuses);
+            //request.setAttribute("literacyList", literacyList);
+            //request.setAttribute("physicalList", physicalList);
+            request.setAttribute("activityId", activityId);
+            request.setAttribute("activityName", activityName);
+            request.setAttribute("activityDescription", activityDescription);
+            request.setAttribute("activityDate", activityDate);
+            request.setAttribute("date", new SimpleDateFormat("yyyy-MM-dd").format(new Date()));
+
+            // Forward to progress.jsp
+            request.getRequestDispatcher("progress.jsp").forward(request, response);
+
         } catch (Exception e) {
             e.printStackTrace();
-            response.sendRedirect("error2.html");
-            return;
+            response.sendRedirect("error.html");
         }
-
-        String firstFocus = focuses[0].trim().toLowerCase();
-        System.out.println("Redirecting to: " + firstFocus);
-
-
-        if ("literacy".equalsIgnoreCase(firstFocus)) {
-            response.sendRedirect("literacyProgress");
-            System.out.println("Sent redirect to literacyProgress page");
-
-        } 
-        if ("physical".equalsIgnoreCase(firstFocus)) {
-            response.sendRedirect("physicalProgress");
-            System.out.println("Sent redirect to physicalProgress page");
-        } else {
-            System.out.println("⚠️ Invalid focus value, redirecting to error2.html");
-            response.sendRedirect("error2.html");
-        }
-
     }
-}
+} 

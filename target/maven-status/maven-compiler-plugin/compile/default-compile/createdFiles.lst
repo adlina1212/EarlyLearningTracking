@@ -15,5 +15,6 @@ com\example\util\servlet\submitPhysicalProgressServlet.class
 com\example\util\servlet\submitActivityServlet.class
 com\example\util\servlet\loginServlet.class
 com\example\util\servlet\redirectToAssessmentServlet.class
+com\example\util\servlet\submitProgressServlet.class
 com\example\util\servlet\registerParentServlet.class
 com\example\util\servlet\submitLiteracyProgressServlet.class

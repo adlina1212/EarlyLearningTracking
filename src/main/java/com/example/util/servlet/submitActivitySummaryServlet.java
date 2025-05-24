@@ -20,11 +20,36 @@ import java.util.concurrent.ExecutionException;
 public class submitActivitySummaryServlet extends HttpServlet {
 
     @Override
+protected void doGet(HttpServletRequest request, HttpServletResponse response)
+        throws ServletException, IOException {
+
+    String activityId = request.getParameter("activityId");
+
+    Firestore db = FirestoreClient.getFirestore();
+
+    try {
+        DocumentSnapshot activityDoc = db.collection("dailyActivities").document(activityId).get().get();
+        if (activityDoc.exists()) {
+            request.setAttribute("activityName", activityDoc.getString("name"));
+            request.setAttribute("activityDescription", activityDoc.getString("description"));
+            request.setAttribute("activityDate", activityDoc.getString("date"));
+        }
+
+        request.getRequestDispatcher("progress.jsp").forward(request, response);
+
+    } catch (InterruptedException | ExecutionException e) {
+        e.printStackTrace();
+        response.sendRedirect("error.html");
+    }
+}
+
+    /*@Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
         String studentId = request.getParameter("studentId");
         String activityId = request.getParameter("activityId");
+        
 
         System.out.println("activity summary studentId = " + studentId);
         System.out.println("activity summary activityId = " + activityId);
@@ -58,7 +83,8 @@ public class submitActivitySummaryServlet extends HttpServlet {
             System.out.println("❌ Activity document not found for ID: " + activityId);
         }
 
-        request.getRequestDispatcher("activitySummary.jsp").forward(request, response);
+        //request.getRequestDispatcher("activitySummary.jsp").forward(request, response);
+        request.getRequestDispatcher("progress.jsp").forward(request, response);
 
     } catch (InterruptedException | ExecutionException e) {
         e.printStackTrace();
@@ -93,5 +119,5 @@ public class submitActivitySummaryServlet extends HttpServlet {
             e.printStackTrace();
             response.sendRedirect("error.jsp");
         }
-    }
+    }*/
 }
