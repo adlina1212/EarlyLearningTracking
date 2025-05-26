@@ -39,15 +39,31 @@
 }
 
 .btn-add-child {
-    display: inline-block;
-    margin-top: 15px;
-    padding: 10px 20px;
-    background-color: #0066cc;
-    color: #fff;
-    border-radius: 5px;
+    background-color: #28a745;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
     text-decoration: none;
+    font-weight: bold;
+    margin-right: 10px;
 }
 
 .btn-add-child:hover {
-    background-color: #004c99;
+    background-color: #218838;
 }
+
+.btn-logout {
+    background-color: #dc3545;
+    color: white;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.btn-logout:hover {
+    background-color: #c82333;
+}
+

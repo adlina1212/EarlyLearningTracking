@@ -4,6 +4,7 @@ com\example\util\FirebaseInitializer.class
 com\example\util\servlet\literacyProgressServlet.class
 com\example\util\servlet\registerChildServlet.class
 com\example\util\servlet\updateActivityServlet.class
+com\example\util\servlet\logoutServlet.class
 com\example\util\servlet\physicalProgressServlet.class
 com\example\util\servlet\parentDashboardServlet.class
 com\example\util\servlet\profileServlet.class
@@ -18,3 +19,4 @@ com\example\util\servlet\redirectToAssessmentServlet.class
 com\example\util\servlet\submitProgressServlet.class
 com\example\util\servlet\registerParentServlet.class
 com\example\util\servlet\submitLiteracyProgressServlet.class
+com\example\util\servlet\chartDataServlet.class

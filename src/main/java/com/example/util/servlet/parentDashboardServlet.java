@@ -20,7 +20,7 @@ public class parentDashboardServlet extends HttpServlet {
         HttpSession session = request.getSession(false);
         String parentId = (session != null) ? (String) session.getAttribute("parentId") : null;
 
-        if (parentId == null) {
+        if (parentId == null || parentId.isEmpty()) {
             response.sendRedirect("login.html");
             return;
         }
@@ -28,25 +28,35 @@ public class parentDashboardServlet extends HttpServlet {
         Firestore db = FirestoreClient.getFirestore();
 
         try {
-            // Fetch parent info
-            DocumentSnapshot parentDoc = db.collection("user").document(parentId).get().get();
-            request.setAttribute("parentDoc", parentDoc);
+            // Step 1: Fetch parent document
+            DocumentReference parentRef = db.collection("user").document(parentId);
+            DocumentSnapshot parentDoc = parentRef.get().get();
 
-            // Fetch children
-            QuerySnapshot childDocs = db.collection("student")
-                    .whereEqualTo("parentId", parentId)
-                    .get()
-                    .get();
-
-            List<QueryDocumentSnapshot> childrenList = childDocs.getDocuments();
-
-            request.setAttribute("childrenList", childrenList);
-            if (childrenList.isEmpty()) {
-                request.setAttribute("noChildren", true);
+            if (!parentDoc.exists()) {
+                response.sendRedirect("error.html");
+                return;
             }
 
-            // Forward to JSP
-            request.getRequestDispatcher("/parentDashboard.jsp").forward(request, response);
+            request.setAttribute("parentDoc", parentDoc);
+
+            // Step 2: Get list of studentIds from parent document
+            List<String> studentIds = (List<String>) parentDoc.get("studentIds");
+
+            List<DocumentSnapshot> childrenList = new java.util.ArrayList<>();
+
+            if (studentIds != null && !studentIds.isEmpty()) {
+                // Step 3: Fetch each student document
+                for (String studentId : studentIds) {
+                    DocumentSnapshot studentDoc = db.collection("student").document(studentId).get().get();
+                    if (studentDoc.exists()) {
+                        childrenList.add(studentDoc); // Add to list
+                    }
+                }
+            }
+
+            // Step 4: Pass data to JSP
+            request.setAttribute("childrenList", childrenList);
+            request.getRequestDispatcher("parentDashboard.jsp").forward(request, response);
 
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
@@ -54,4 +64,3 @@ public class parentDashboardServlet extends HttpServlet {
         }
     }
 }
-

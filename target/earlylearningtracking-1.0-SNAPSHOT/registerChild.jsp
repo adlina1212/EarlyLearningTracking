@@ -4,12 +4,37 @@
 <head>
     <title>Register Child</title>
     <link rel="stylesheet" type="text/css" href="css/registerChild.css">
+    <style>
+        .child-form {
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            background: #f9f9f9;
+        }
+        .form-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+    </style>
+
     <script>
         function addChildForm() {
-            const childFormsContainer = document.getElementById("childFormsContainer");
-            const newForm = document.querySelector(".child-form").cloneNode(true);
-            newForm.querySelectorAll("input, textarea").forEach(input => input.value = "");
-            childFormsContainer.appendChild(newForm);
+            const container = document.getElementById("childFormsContainer");
+            const firstForm = document.querySelector(".child-form");
+            const newForm = firstForm.cloneNode(true);
+
+            // Clear values in cloned inputs
+            newForm.querySelectorAll("input, select, textarea").forEach(input => {
+                if (input.type === "file") {
+                    input.value = null;
+                } else {
+                    input.value = "";
+                }
+            });
+
+            container.appendChild(newForm);
         }
     </script>
 </head>
@@ -22,24 +47,25 @@
         <div id="childFormsContainer">
             <div class="child-form">
                 <h3>Child Information</h3>
+
                 <label>Child's Full Name:</label>
-                <input type="text" name="childName" required><br>
+                <input type="text" name="childName[]" required><br>
 
                 <label>Date of Birth:</label>
-                <input type="date" name="dob" required><br>
+                <input type="date" name="dob[]" required><br>
 
                 <label>Gender:</label>
-                <select name="gender" required>
+                <select name="gender[]" required>
                     <option value="">--Select--</option>
                     <option value="Male">Male</option>
                     <option value="Female">Female</option>
                 </select><br>
 
                 <label>Photo:</label>
-                <input type="file" name="photo" accept="image/*"><br>
+                <input type="file" name="photo[]" accept="image/*"><br>
 
                 <label>Allergies:</label>
-                <textarea name="allergies" rows="3" placeholder="List any known allergies"></textarea><br>
+                <textarea name="allergies[]" rows="3" placeholder="List any known allergies"></textarea><br>
             </div>
         </div>
 

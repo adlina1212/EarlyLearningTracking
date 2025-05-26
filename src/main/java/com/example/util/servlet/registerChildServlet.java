@@ -23,70 +23,63 @@ public class registerChildServlet extends HttpServlet {
 
         // Get session or parent info (if needed)
         HttpSession session = request.getSession();
-        String parentId = (String) session.getAttribute("parentId"); // Or retrieve from logged-in user
+        String parentId = (String) session.getAttribute("parentId");
         if (parentId == null) {
             parentId = "defaultParent"; // fallback
         }
 
-        List<Map<String, Object>> childrenList = new ArrayList<>();
+        try {
+            String[] names = request.getParameterValues("childName[]");
+            String[] dobs = request.getParameterValues("dob[]");
+            String[] genders = request.getParameterValues("gender[]");
+            String[] allergiesArr = request.getParameterValues("allergies[]");
 
-        int index = 0;
-        while (true) {
-            String name = request.getParameter("childName");
-            String dob = request.getParameter("dob");
-            String gender = request.getParameter("gender");
-            String allergies = request.getParameter("allergies");
-
-            if (name == null || dob == null || gender == null) break; // no more children
-
-            Map<String, Object> childData = new HashMap<>();
-            childData.put("fullName", name);
-            childData.put("dob", dob);
-            childData.put("gender", gender);
-            childData.put("allergies", allergies);
-            childData.put("createdAt", new Date());
-
-            // Optionally handle file uploads (photo)
-            try {
-                Part photoPart = request.getPart("photo");
-                if (photoPart != null && photoPart.getSize() > 0) {
-                    String fileName = photoPart.getSubmittedFileName();
-                    // Optional: upload to Firebase Storage and get the URL
-                    // For now, just save the filename (not the content)
-                    childData.put("photoName", fileName);
+            Collection<Part> parts = request.getParts();
+            List<Part> photoParts = new ArrayList<>();
+            for (Part part : parts) {
+                if ("photo[]".equals(part.getName())) {
+                    photoParts.add(part);
                 }
-            } catch (Exception e) {
-                e.printStackTrace();
             }
 
-            // Save each child under `student` collection
-            try {
-                // Save each child under `student` collection and get the auto-generated ID
+            for (int i = 0; i < names.length; i++) {
+                String name = names[i];
+                String dob = dobs[i];
+                String gender = genders[i];
+                String allergies = allergiesArr[i];
+
+                Map<String, Object> childData = new HashMap<>();
+                childData.put("fullName", name);
+                childData.put("dob", dob);
+                childData.put("gender", gender);
+                childData.put("allergies", allergies);
+                childData.put("createdAt", new Date());
+
+                if (i < photoParts.size()) {
+                    Part photoPart = photoParts.get(i);
+                    if (photoPart != null && photoPart.getSize() > 0) {
+                        String fileName = photoPart.getSubmittedFileName();
+                        childData.put("photoName", fileName);
+                    }
+                }
+
                 DocumentReference newChildRef = db.collection("student").document();
                 ApiFuture<WriteResult> future = newChildRef.set(childData);
-                future.get(); // wait for save
-    
-                // Get the generated studentId
+                future.get();
+
                 String studentId = newChildRef.getId();
-    
-                // Step 2: Update Parent Document with studentId
                 DocumentReference parentRef = db.collection("user").document(parentId);
-    
-                // Use Firestore ArrayUnion to add to array without overwriting existing ones
                 ApiFuture<WriteResult> updateFuture = parentRef.update("studentIds", FieldValue.arrayUnion(studentId));
-                updateFuture.get(); // wait for update
-    
+                updateFuture.get();
+
                 System.out.println("Student ID " + studentId + " added to parent " + parentId);
-    
-            } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace();
-                response.sendRedirect("error.html");
-                return;
             }
 
-            break; // only 1 child supported now — unless using indexed field names (e.g., childName_0, childName_1)
-        }
+            response.sendRedirect("parentDashboard");
 
-        response.sendRedirect("parentDashboard"); // or wherever you want
+        } catch (Exception e) {
+            e.printStackTrace();
+            response.sendRedirect("error.html");
+        }
     }
 }

@@ -52,7 +52,12 @@
     <groupId>org.slf4j</groupId>
     <artifactId>slf4j-simple</artifactId>
     <version>2.0.9</version> <!-- Or latest version -->
-</dependency>
+    </dependency>
+    <dependency>
+    <groupId>org.json</groupId>
+    <artifactId>json</artifactId>
+    <version>20230227</version>
+    </dependency>
 
   </dependencies>
 
