@@ -23,9 +23,12 @@ public class chartDataServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        HttpSession session = request.getSession(false);
-        String studentId = (session != null) ? (String) session.getAttribute("studentId") : null;
+        //HttpSession session = request.getSession(false);
+        //String studentId = (session != null) ? (String) session.getAttribute("studentId") : null;
+        String studentId = request.getParameter("studentId"); // instead of from session
         String selectedDate = request.getParameter("date");
+
+        System.out.println("chartData called with studentId: " + studentId + ", date: " + selectedDate);
 
         if (studentId == null || selectedDate == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -51,7 +54,7 @@ public class chartDataServlet extends HttpServlet {
             for (DocumentSnapshot doc : documents) {
                 Timestamp timestamp = doc.getTimestamp("timestamp");
                 if (timestamp != null) {
-                    String activityDate = timestamp.toDate().toInstant().toString().substring(0, 10);
+                    String activityDate = new java.text.SimpleDateFormat("yyyy-MM-dd").format(timestamp.toDate());
                     if (selectedDate.equals(activityDate)) {
                         Map<String, Object> achievement = (Map<String, Object>) doc.get("achievement");
 
@@ -86,6 +89,12 @@ public class chartDataServlet extends HttpServlet {
 
             resultJson.put("literacy", literacyMap);
             resultJson.put("physical", physicalMap);
+
+            
+            System.out.println("selectedDate: " + selectedDate);
+            System.out.println("literacyMap: " + literacyMap);
+            System.out.println("physicalMap: " + physicalMap);
+
 
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();

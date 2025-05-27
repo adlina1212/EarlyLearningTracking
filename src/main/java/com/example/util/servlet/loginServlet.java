@@ -28,7 +28,7 @@ public class loginServlet extends HttpServlet {
         String password = request.getParameter("password");
 
         if (username == null || password == null || username.isEmpty() || password.isEmpty()) {
-            response.sendRedirect("login.html?error=Please+enter+both+username+and+password");
+            response.sendRedirect("login.jsp?error=Please+enter+both+username+and+password");
             return;
         }
 
@@ -41,7 +41,7 @@ public class loginServlet extends HttpServlet {
             QuerySnapshot querySnapshot = query.get().get();
 
             if (querySnapshot.isEmpty()) {
-                response.sendRedirect("login.html?error=Invalid+username+or+password");
+                response.sendRedirect("login.jsp?error=Invalid+username+or+password");
                 return;
             }
 
@@ -49,14 +49,14 @@ public class loginServlet extends HttpServlet {
             String storedPassword = userDoc.getString("password");
 
             if (storedPassword == null || !password.equals(storedPassword)) {
-                response.sendRedirect("login.html?error=Invalid+username+or+password");
+                response.sendRedirect("login.jsp?error=Invalid+username+or+password");
                 return;
             }
 
             // Fetch the role
             String role = userDoc.getString("role");
             if (role == null) {
-                response.sendRedirect("login.html?error=Account+role+not+defined");
+                response.sendRedirect("login.jsp?error=Account+role+not+defined");
                 return;
             }
 
@@ -73,12 +73,12 @@ public class loginServlet extends HttpServlet {
                 session.setAttribute("parentId", userDoc.getId());
                 response.sendRedirect("parentDashboard");
             } else {
-                response.sendRedirect("login.html?error=Unauthorized+role");
+                response.sendRedirect("login.jsp?error=Unauthorized+role");
             }
 
         } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace(); // Log the error for server logs
-            response.sendRedirect("login.html?error=Authentication+failed");
+            response.sendRedirect("login.jsp?error=Authentication+failed");
         }
     }
 }

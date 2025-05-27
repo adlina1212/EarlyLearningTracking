@@ -1,11 +1,10 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="com.google.cloud.firestore.*" %>
 <%@ page import="java.util.List, java.util.Map" %>
-<%@ page import="com.google.cloud.firestore.QueryDocumentSnapshot" %>
+<%@ page import="com.google.cloud.firestore.DocumentSnapshot" %>
 <%@ page session="true" %>
 <%
-    DocumentSnapshot parentDoc = (DocumentSnapshot) request.getAttribute("parentDoc");
-    List<QueryDocumentSnapshot> childrenList = (List<QueryDocumentSnapshot>) request.getAttribute("childrenList");
+    List<DocumentSnapshot> childrenList = (List<DocumentSnapshot>) request.getAttribute("childrenList");
 %>
 
 <!DOCTYPE html>
@@ -35,6 +34,11 @@
             <button onclick="window.location.href='logout'" class="btn-logout">Logout</button>
         </div>
     </header>
+    <% if (childrenList != null && !childrenList.isEmpty()) { %>
+        <%-- Assuming you're showing only one child's data at a time for now --%>
+        <input type="hidden" id="studentId" value="<%= childrenList.get(0).getId() %>" />
+    <% } %>
+
 
     <div class="content">
         <div class="card">
@@ -62,56 +66,92 @@
         </div>
 
         <div class="card">
-            <h2>View Progress Chart</h2>
-            <label for="progressDate">Select Date:</label>
-            <input type="date" id="progressDate" name="progressDate" onchange="loadChart(this.value)">
-            <canvas id="progressChart" style="max-width: 100%; margin-top: 20px;"></canvas>
+            <h2>Progress Overview</h2>
+            <label for="datePicker">Select Date:</label>
+            <input type="date" id="datePicker" name="datePicker" required>
+            <button onclick="loadChartData()">Load Progress</button>
+
+            <canvas id="progressChart" width="800" height="400"></canvas>
+
         </div>
     </div>
 </div>
-
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-async function loadChart(date) {
-    if (!date) return;
-    const res = await fetch(`chartData?date=${date}`);
-    const data = await res.json();
+    let chartInstance = null;
 
-    const labels = Object.keys(data.literacy || {});
-    const literacyData = Object.values(data.literacy || {});
-    const physicalData = Object.values(data.physical || {});
+    function loadChartData() {
+        const date = document.getElementById('datePicker').value;
+        const studentId = document.getElementById('studentId').value;
 
-    const ctx = document.getElementById('progressChart').getContext('2d');
-    if (window.myChart) window.myChart.destroy();
-    window.myChart = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [
-                {
-                    label: 'Literacy',
-                    data: literacyData,
-                    backgroundColor: 'rgba(54, 162, 235, 0.6)'
-                },
-                {
-                    label: 'Physical',
-                    data: physicalData,
-                    backgroundColor: 'rgba(255, 99, 132, 0.6)'
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: { position: 'top' },
-                title: {
-                    display: true,
-                    text: 'Daily Assessment Scores'
-                }
-            }
+        console.log("📅 Selected date:", date);
+        console.log("🧒 Student ID:", studentId);
+
+        if (!date) {
+            alert("Please select a date.");
+            return;
         }
-    });
-}
-</script>
 
+        fetch('${pageContext.request.contextPath}/chartData?date=' + date + '&studentId=' + studentId)
+            .then(response => response.json())
+            .then(data => {
+                const literacyLabels = Object.keys(data.literacy || {});
+                const literacyData = Object.values(data.literacy || {});
+
+                const physicalLabels = Object.keys(data.physical || {});
+                const physicalData = Object.values(data.physical || {});
+
+                const labels = [...new Set([...literacyLabels, ...physicalLabels])];
+
+                const literacyDataset = {
+                    label: "Literacy",
+                    backgroundColor: "rgba(54, 162, 235, 0.6)",
+                    borderColor: "rgba(54, 162, 235, 1)",
+                    borderWidth: 1,
+                    data: labels.map(label => data.literacy?.[label] || 0)
+                };
+
+                const physicalDataset = {
+                    label: "Physical",
+                    backgroundColor: "rgba(255, 99, 132, 0.6)",
+                    borderColor: "rgba(255, 99, 132, 1)",
+                    borderWidth: 1,
+                    data: labels.map(label => data.physical?.[label] || 0)
+                };
+
+                const chartData = {
+                    labels: labels,
+                    datasets: [literacyDataset, physicalDataset]
+                };
+
+                const ctx = document.getElementById('progressChart').getContext('2d');
+
+                // Destroy old chart if exists
+                if (chartInstance) chartInstance.destroy();
+
+                chartInstance = new Chart(ctx, {
+                    type: 'bar',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                min: 0,
+                                max: 5,
+                                ticks: {
+                                    stepSize: 1
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching chart data:", error);
+                alert("Failed to load chart data.");
+            });
+    }
+</script>
 </body>
 </html>

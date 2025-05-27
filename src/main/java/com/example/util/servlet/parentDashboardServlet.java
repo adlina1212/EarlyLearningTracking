@@ -49,12 +49,17 @@ public class parentDashboardServlet extends HttpServlet {
                 for (String studentId : studentIds) {
                     DocumentSnapshot studentDoc = db.collection("student").document(studentId).get().get();
                     if (studentDoc.exists()) {
-                        childrenList.add(studentDoc); // Add to list
+                        childrenList.add(studentDoc);  // ✅ Corrected
                     }
                 }
             }
 
             // Step 4: Pass data to JSP
+            System.out.println("Total children found: " + childrenList.size());
+            for (DocumentSnapshot childDoc : childrenList) {
+                System.out.println("Student ID: " + childDoc.getId() + ", Name: " + childDoc.getString("fullName"));
+            }
+
             request.setAttribute("childrenList", childrenList);
             request.getRequestDispatcher("parentDashboard.jsp").forward(request, response);
 
