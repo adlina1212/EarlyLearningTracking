@@ -32,6 +32,9 @@ public class registerParentServlet extends HttpServlet {
         String phone = request.getParameter("phone");
         String occupation = request.getParameter("occupation");
         String address = request.getParameter("address");
+        String postcode = request.getParameter("postcode");
+        String city = request.getParameter("city");
+        String state = request.getParameter("state");
         String password = request.getParameter("password");
 
         if (parentName == null || email == null || phone == null || password == null) {
@@ -53,6 +56,10 @@ public class registerParentServlet extends HttpServlet {
         parentData.put("address", address);
         parentData.put("username", username);
         parentData.put("password", password);
+        parentData.put("address", address);
+        parentData.put("postcode", postcode);
+        parentData.put("city", city);
+        parentData.put("state", state);
         parentData.put("role", "parent");
 
         try {

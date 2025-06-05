@@ -1,9 +1,11 @@
 com\example\util\servlet\checkChildServlet.class
 com\example\util\servlet\submitActivitySummaryServlet.class
 com\example\util\FirebaseInitializer.class
+com\example\util\servlet\QueryDocumentSnapshot.class
 com\example\util\servlet\literacyProgressServlet.class
 com\example\util\servlet\registerChildServlet.class
 com\example\util\servlet\updateActivityServlet.class
+com\example\util\servlet\chartPieDataServlet.class
 com\example\util\servlet\logoutServlet.class
 com\example\util\servlet\physicalProgressServlet.class
 com\example\util\servlet\parentDashboardServlet.class

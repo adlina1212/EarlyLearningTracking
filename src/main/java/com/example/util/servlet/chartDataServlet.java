@@ -7,6 +7,7 @@ import com.google.firebase.cloud.FirestoreClient;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
+import com.google.cloud.firestore.QueryDocumentSnapshot;
 
 import java.io.IOException;
 import java.io.PrintWriter;

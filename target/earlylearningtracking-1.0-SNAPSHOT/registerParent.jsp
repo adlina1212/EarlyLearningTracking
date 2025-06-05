@@ -77,19 +77,25 @@
     </style>
 
     <script>
-        function validateForm() {
+        document.querySelector("form").addEventListener("submit", function(e) {
             const password = document.getElementById("password").value;
-            const confirmPassword = document.getElementById("confirmPassword").value;
-            const errorMsg = document.getElementById("errorMsg");
+            const confirm = document.getElementById("confirmPassword").value;
+            const postcode = document.getElementById("postcode").value;
 
-            if (password !== confirmPassword) {
-                errorMsg.textContent = "Passwords do not match.";
-                return false;
+            if (password !== confirm) {
+                e.preventDefault();
+                alert("Password and Confirm Password do not match.");
+                return;
             }
 
-            return true;
-        }
+            if (!/^\d{5}$/.test(postcode)) {
+                e.preventDefault();
+                alert("Postcode must be a 5-digit number.");
+                return;
+            }
+        });
     </script>
+
 </head>
 <body>
 
@@ -110,6 +116,36 @@
 
         <label for="occupation">Occupation</label>
         <input type="text" id="occupation" name="occupation" required>
+        
+        <!-- Address fields -->
+        <label for="address">Address</label>
+        <input type="text" id="address" name="address" required>
+
+        <label for="postcode">Postcode</label>
+        <input type="text" id="postcode" name="postcode" required>
+
+        <label for="city">City</label>
+        <input type="text" id="city" name="city" required>
+
+        <select id="state" name="state" required>
+            <option value="">-- Select State --</option>
+            <option value="Johor">Johor</option>
+            <option value="Kedah">Kedah</option>
+            <option value="Kelantan">Kelantan</option>
+            <option value="Melaka">Melaka</option>
+            <option value="Negeri Sembilan">Negeri Sembilan</option>
+            <option value="Pahang">Pahang</option>
+            <option value="Penang">Penang</option>
+            <option value="Perak">Perak</option>
+            <option value="Perlis">Perlis</option>
+            <option value="Sabah">Sabah</option>
+            <option value="Sarawak">Sarawak</option>
+            <option value="Selangor">Selangor</option>
+            <option value="Terengganu">Terengganu</option>
+            <option value="Kuala Lumpur">Kuala Lumpur</option>
+            <option value="Putrajaya">Putrajaya</option>
+            <option value="Labuan">Labuan</option>
+        </select>
 
         <label for="password">Password</label>
         <input type="password" id="password" name="password" required>

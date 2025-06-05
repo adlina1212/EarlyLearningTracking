@@ -58,9 +58,12 @@ public class profileServlet extends HttpServlet {
             if ("parent".equals(role)) {
                 request.setAttribute("parentsName", userDoc.getString("parentsName"));
                 request.setAttribute("studentPhoto", userDoc.getString("studentPhoto"));
+                request.getRequestDispatcher("profileParent.jsp").forward(request, response);
             }
-
-            request.getRequestDispatcher("profile.jsp").forward(request, response);
+            else{
+                request.getRequestDispatcher("profileTeacher.jsp").forward(request, response);
+            }
+            
 
         } catch (InterruptedException | ExecutionException | IndexOutOfBoundsException e) {
             e.printStackTrace();

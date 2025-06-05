@@ -17,6 +17,9 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.time.LocalDate;
+import java.time.Period;
+import java.time.ZoneId;
 
 @WebServlet("/redirectToAssessment")
 public class redirectToAssessmentServlet extends HttpServlet {
@@ -28,7 +31,7 @@ public class redirectToAssessmentServlet extends HttpServlet {
         String studentId = request.getParameter("studentId");
         String activityId = request.getParameter("activityId");
         String[] focuses = request.getParameterValues("focuses");
-
+    
         System.out.println("studentId = " + studentId);
         System.out.println("activityId = " + activityId);
         System.out.println("focuses = " + Arrays.toString(focuses));
@@ -44,8 +47,17 @@ public class redirectToAssessmentServlet extends HttpServlet {
             // Fetch student data
             DocumentSnapshot studentDoc = db.collection("student").document(studentId).get().get();
             String fullName = studentDoc.getString("fullName");
-            Long ageLong = studentDoc.getLong("age");
-            int age = (ageLong != null) ? ageLong.intValue() : 0;
+            String dobStr = studentDoc.getString("dob");
+
+            int age = 0;
+            if (dobStr != null) {
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                Date dob = sdf.parse(dobStr);
+                LocalDate birthDate = dob.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+                LocalDate currentDate = LocalDate.now();
+                Period period = Period.between(birthDate, currentDate);
+                age = period.getYears() * 12 + period.getMonths();
+            }
 
             // Determine age range for criteria
             String ageRange = (age <= 6) ? "0-6months" : (age <= 12) ? "6-12months" : "2-3years";
@@ -96,8 +108,6 @@ public class redirectToAssessmentServlet extends HttpServlet {
             request.setAttribute("fullName", fullName);
             request.setAttribute("age", age);
             request.setAttribute("focuses", focuses);
-            //request.setAttribute("literacyList", literacyList);
-            //request.setAttribute("physicalList", physicalList);
             request.setAttribute("activityId", activityId);
             request.setAttribute("activityName", activityName);
             request.setAttribute("activityDescription", activityDescription);
