@@ -7,12 +7,13 @@ import com.google.firebase.cloud.FirestoreClient;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
 
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+
+import org.json.JSONArray;
 import org.json.JSONObject;
 
 
@@ -24,12 +25,8 @@ public class chartDataServlet extends HttpServlet {
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        //HttpSession session = request.getSession(false);
-        //String studentId = (session != null) ? (String) session.getAttribute("studentId") : null;
-        String studentId = request.getParameter("studentId"); // instead of from session
+        String studentId = request.getParameter("studentId");
         String selectedDate = request.getParameter("date");
-
-        System.out.println("chartData called with studentId: " + studentId + ", date: " + selectedDate);
 
         if (studentId == null || selectedDate == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -38,7 +35,7 @@ public class chartDataServlet extends HttpServlet {
         }
 
         Firestore db = FirestoreClient.getFirestore();
-        JSONObject resultJson = new JSONObject();
+        List<JSONObject> activityList = new ArrayList<>();
 
         try {
             CollectionReference assessments = db.collection("ActivityAssessment");
@@ -49,55 +46,50 @@ public class chartDataServlet extends HttpServlet {
 
             List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 
-            Map<String, Integer> literacyMap = new LinkedHashMap<>();
-            Map<String, Integer> physicalMap = new LinkedHashMap<>();
-
             for (DocumentSnapshot doc : documents) {
                 Timestamp timestamp = doc.getTimestamp("timestamp");
                 if (timestamp != null) {
                     String activityDate = new java.text.SimpleDateFormat("yyyy-MM-dd").format(timestamp.toDate());
-                    if (selectedDate.equals(activityDate)) {
-                        Map<String, Object> achievement = (Map<String, Object>) doc.get("achievement");
+                    if (!selectedDate.equals(activityDate)) continue;
+                }
 
-                        if (achievement != null) {
-                            Map<String, Object> literacy = (Map<String, Object>) achievement.get("literacy");
-                            if (literacy != null) {
-                                for (String key : literacy.keySet()) {
-                                    try {
-                                        int value = Integer.parseInt(literacy.get(key).toString());
-                                        literacyMap.put(key, value);
-                                    } catch (NumberFormatException e) {
-                                        literacyMap.put(key, 0);
-                                    }
-                                }
-                            }
+                String activityId = doc.getString("activityId");
+                String activityName = "Unnamed Activity";
+                if (activityId != null) {
+                    DocumentSnapshot activityDoc = db.collection("dailyActivities").document(activityId).get().get();
+                    activityName = activityDoc.getString("name");
+                }
 
-                            Map<String, Object> physical = (Map<String, Object>) achievement.get("physical");
-                            if (physical != null) {
-                                for (String key : physical.keySet()) {
-                                    try {
-                                        int value = Integer.parseInt(physical.get(key).toString());
-                                        physicalMap.put(key, value);
-                                    } catch (NumberFormatException e) {
-                                        physicalMap.put(key, 0);
-                                    }
-                                }
-                            }
+                JSONObject activityJson = new JSONObject();
+                activityJson.put("activityId", activityId);
+                activityJson.put("activityName", activityName);
+
+                JSONObject literacyJson = new JSONObject();
+                JSONObject physicalJson = new JSONObject();
+
+                Map<String, Object> achievement = (Map<String, Object>) doc.get("achievement");
+                if (achievement != null) {
+                    Map<String, Object> literacy = (Map<String, Object>) achievement.get("literacy");
+                    if (literacy != null) {
+                        for (String key : literacy.keySet()) {
+                            literacyJson.put(key, Integer.parseInt(literacy.get(key).toString()));
+                        }
+                    }
+
+                    Map<String, Object> physical = (Map<String, Object>) achievement.get("physical");
+                    if (physical != null) {
+                        for (String key : physical.keySet()) {
+                            physicalJson.put(key, Integer.parseInt(physical.get(key).toString()));
                         }
                     }
                 }
+
+                activityJson.put("literacy", literacyJson);
+                activityJson.put("physical", physicalJson);
+                activityList.add(activityJson);
             }
 
-            resultJson.put("literacy", literacyMap);
-            resultJson.put("physical", physicalMap);
-
-            
-            System.out.println("selectedDate: " + selectedDate);
-            System.out.println("literacyMap: " + literacyMap);
-            System.out.println("physicalMap: " + physicalMap);
-
-
-        } catch (InterruptedException | ExecutionException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("Error retrieving chart data");
@@ -106,7 +98,8 @@ public class chartDataServlet extends HttpServlet {
 
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
-        out.print(resultJson.toString());
+        out.print(activityList.toString());
         out.flush();
     }
 }
+

@@ -46,7 +46,14 @@ public class submitProgressServlet extends HttpServlet {
 
         // Add teacher comment and time to complete
         String teacherComment = request.getParameter("teacherComment");
-        String timeToComplete = request.getParameter("timeToComplete");
+        String timeToCompleteStr = request.getParameter("timeToComplete");
+        Number timeToComplete = null;
+
+        try {
+            timeToComplete = Double.parseDouble(timeToCompleteStr);  // or Integer.parseInt(...) if only whole numbers
+        } catch (NumberFormatException e) {
+            timeToComplete = 0;  // fallback or handle error
+        }
 
         // Put data into achievement map
         achievementData.put("literacy", literacyMap);

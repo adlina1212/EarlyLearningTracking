@@ -14,17 +14,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Parent Dashboard</title>
 
-    <!-- Bootstrap CSS (Bootstrap 5) -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/css/bootstrap.min.css" rel="stylesheet">
-
-    <!-- Optional Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.10.0/dist/umd/popper.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.0/dist/js/bootstrap.min.js"></script>
-
-    <!-- Material Icons (optional for icons) -->
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
-    <!-- Custom CSS -->
     <style>
         body {
             background-color: #f7f9fc;
@@ -35,12 +29,11 @@
         .sidebar {
             position: fixed;
             height: 100vh;
-            width: 220 px;
+            width: 200px;
             background-color: #a1c6ea;
             color: white;
             padding: 20px;
             box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
-            transition: all 0.3s ease;
         }
         .sidebar h2 {
             font-size: 1.8em;
@@ -63,16 +56,6 @@
         .main-content {
             margin-left: 240px;
             padding: 30px;
-        }
-        header{
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        header h1{
-            font-size: 2.5em;
-            color: #333;
         }
         .card {
             border-radius: 12px;
@@ -100,32 +83,25 @@
         .btn-add-child:hover{
             background-color: #218828;
         }
-        /* Table Styles */
         table th, table td {
             padding: 15px;
             text-align: left;
             border-bottom: 1px solid #ddd;
         }
-
         table th {
             background-color: #58a6d1;
             color: white;
         }
-
         table tr:nth-child(even) {
             background-color: #f9f9f9;
         }
-
         table tr:hover {
             background-color: #f1f1f1;
         }
-
         .table-container {
             max-width: 100%;
             overflow-x: auto;
         }
-
-        /* Progress Chart */
         #progressChart {
             max-width: 100%;
             height: 400px;
@@ -134,7 +110,6 @@
 </head>
 <body>
 
-<!-- Sidebar -->
 <div class="sidebar">
     <h2>Parent Dashboard</h2>
     <nav>
@@ -144,9 +119,7 @@
     </nav>
 </div>
 
-<!-- Main Content Area -->
 <div class="main-content">
-    <!-- Header Section -->
     <header class="header d-flex justify-content-between align-items-center mb-4">
         <h1>Welcome, Parent</h1>
         <div>
@@ -156,11 +129,9 @@
     </header>
 
     <% if (childrenList != null && !childrenList.isEmpty()) { %>
-        <%-- Assuming you're showing only one child's data at a time for now --%>
         <input type="hidden" id="studentId" value="<%= childrenList.get(0).getId() %>" />
     <% } %>
 
-    <!-- Display Children's Information -->
     <div class="content">
         <div class="card">
             <div class="card-body">
@@ -194,7 +165,6 @@
             </div>
         </div>
 
-        <!-- Progress Overview Section -->
         <div class="card">
             <div class="card-body">
                 <h2>Progress Overview</h2>
@@ -204,16 +174,7 @@
                 </div>
                 <button onclick="loadChartData(); loadPieChartData();" class="btn btn-primary">Load Progress</button>
 
-                <!-- Separate Chart Containers -->
-                <div class="chart-container mt-4">
-                    <div>
-                        <h3>Literacy Progress</h3>
-                        <canvas id="literacyChart"></canvas>
-                    </div>
-                    <div>
-                        <h3>Physical Progress</h3>
-                        <canvas id="physicalChart"></canvas>
-                    </div>
+                <div id="chartsContainer" class="chart-container mt-4">
                     <div>
                         <h3 style="margin-top: 40px;">Time Duration Per Activity</h3>
                         <canvas id="activityTimePieChart" width="800" height="400"></canvas>
@@ -226,15 +187,13 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    let literacyChartInstance = null;
-    let physicalChartInstance = null;
     let pieInstance = null;
 
     function getBarColors(values) {
         return values.map(value => {
-            if (value <= 2) return 'rgba(255, 99, 132, 0.7)';      // red
-            if (value === 3) return 'rgba(255, 206, 86, 0.7)';     // yellow
-            return 'rgba(75, 192, 192, 0.7)';                      // green
+            if (value <= 2) return 'rgba(255, 99, 132, 0.7)';
+            if (value === 3) return 'rgba(255, 206, 86, 0.7)';
+            return 'rgba(75, 192, 192, 0.7)';
         });
     }
 
@@ -242,132 +201,133 @@
         const date = document.getElementById('datePicker').value;
         const studentId = document.getElementById('studentId').value;
 
-        console.log("📅 Selected date:", date);
-        console.log("🧒 Student ID:", studentId);
-
         if (!date) {
             alert("Please select a date.");
             return;
         }
 
-        fetch('${pageContext.request.contextPath}/chartData?date=' + date + '&studentId=' + studentId)
+        fetch('chartData?date=' + date + '&studentId=' + studentId)
             .then(response => response.json())
             .then(data => {
-                const literacyLabels = Object.keys(data.literacy || {});
-                const literacyData = Object.values(data.literacy || {});
+                const container = document.getElementById('chartsContainer');
 
-                const physicalLabels = Object.keys(data.physical || {});
-                const physicalData = Object.values(data.physical || {});
+                data.forEach((activity, index) => {
+                    const literacyLabels = Object.keys(activity.literacy || {});
+                    const literacyValues = Object.values(activity.literacy || {});
+                    const physicalLabels = Object.keys(activity.physical || {});
+                    const physicalValues = Object.values(activity.physical || {});
 
-                //const labels = [...new Set([...literacyLabels, ...physicalLabels])];
+                    const activityTitle = document.createElement('h4');
+                    activityTitle.textContent = `Activity: ${activity.activityName}`;
+                    container.appendChild(activityTitle);
 
-                const literacyCtx = document.getElementById('literacyChart').getContext('2d');
-                const physicalCtx = document.getElementById('physicalChart').getContext('2d');
-
-                // Destroy existing charts if they exist
-                if (literacyChartInstance) literacyChartInstance.destroy();
-                if (physicalChartInstance) physicalChartInstance.destroy();
-
-                literacyChartInstance = new Chart(literacyCtx, {
-                    type: 'bar',
-                    data: {
-                        labels: literacyLabels,
-                        datasets: [{
-                            label: 'Literacy Progress',
-                            data: literacyData,
-                            backgroundColor: getBarColors(literacyData),
-                            borderColor: 'rgba(0,0,0,0.7)',
-                            borderWidth: 1
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                min: 0,
-                                max: 5,
-                                ticks: {
-                                    stepSize: 1
+                    if (literacyLabels.length > 0) {
+                        const literacyCanvas = document.createElement('canvas');
+                        literacyCanvas.id = `literacyChart_${index}`;
+                        container.appendChild(literacyCanvas);
+                        new Chart(literacyCanvas.getContext('2d'), {
+                            type: 'bar',
+                            data: {
+                                labels: literacyLabels,
+                                datasets: [{
+                                    label: 'Literacy Progress',
+                                    data: literacyValues,
+                                    backgroundColor: getBarColors(literacyValues),
+                                    borderColor: 'rgba(0,0,0,0.7)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        min: 0,
+                                        max: 5,
+                                        ticks: {
+                                            stepSize: 1
+                                        }
+                                    }
                                 }
                             }
-                        }
+                        });
+                    }
+
+                    if (physicalLabels.length > 0) {
+                        const physicalCanvas = document.createElement('canvas');
+                        physicalCanvas.id = `physicalChart_${index}`;
+                        container.appendChild(physicalCanvas);
+                        new Chart(physicalCanvas.getContext('2d'), {
+                            type: 'bar',
+                            data: {
+                                labels: physicalLabels,
+                                datasets: [{
+                                    label: 'Physical Progress',
+                                    data: physicalValues,
+                                    backgroundColor: getBarColors(physicalValues),
+                                    borderColor: 'rgba(0,0,0,0.7)',
+                                    borderWidth: 1
+                                }]
+                            },
+                            options: {
+                                responsive: true,
+                                scales: {
+                                    y: {
+                                        beginAtZero: true,
+                                        min: 0,
+                                        max: 5,
+                                        ticks: {
+                                            stepSize: 1
+                                        }
+                                    }
+                                }
+                            }
+                        });
                     }
                 });
+            })
+            .catch(error => {
+                console.error("Error loading chart data:", error);
+                alert("Failed to load chart data.");
+            });
+    }
 
-                physicalChartInstance = new Chart(physicalCtx, {
-                    type: 'bar',
+    function loadPieChartData() {
+        const date = document.getElementById('datePicker').value;
+        const studentId = document.getElementById('studentId').value;
+
+        fetch(`chartPieData?studentId=${studentId}&date=${date}`)
+            .then(response => response.json())
+            .then(data => {
+                const labels = Object.keys(data);
+                const values = Object.values(data);
+
+                const ctx = document.getElementById('activityTimePieChart').getContext('2d');
+                if (pieInstance) pieInstance.destroy();
+                pieInstance = new Chart(ctx, {
+                    type: 'pie',
                     data: {
-                        labels: physicalLabels,
+                        labels: labels,
                         datasets: [{
-                            label: 'Physical Progress',
-                            data: physicalData,
-                            backgroundColor: getBarColors(physicalData),
-                            borderColor: 'rgba(0,0,0,0.7)',
-                            borderWidth: 1
+                            label: 'Time Duration by Activity',
+                            data: values,
+                            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
                         }]
                     },
                     options: {
                         responsive: true,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                min: 0,
-                                max: 5,
-                                ticks: {
-                                    stepSize: 1
-                                }
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
                             }
                         }
                     }
                 });
             })
             .catch(error => {
-                console.error("Error fetching chart data:", error);
-                alert("Failed to load chart data.");
+                console.error("Error loading pie chart:", error);
             });
     }
-    function loadPieChartData() {
-    const date = document.getElementById('datePicker').value;
-    const studentId = '<%= childrenList.get(0).getId() %>'; // or session value
-
-    fetch(`chartPieData?studentId=${studentId}&date=${date}`)
-        .then(response => response.json())
-        .then(data => {
-            console.log("Pie chart data:", data);
-
-            const labels = Object.keys(data);
-            const values = Object.values(data);
-
-            const ctx = document.getElementById('activityTimePieChart').getContext('2d');
-            if (pieInstance) pieInstance.destroy();
-            pieInstance = new Chart(ctx, {
-                type: 'pie',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Time Duration by Activity',
-                        data: values,
-                        backgroundColor: [
-                            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'
-                        ]
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom'
-                        }
-                    }
-                }
-            });
-        })
-        .catch(error => {
-            console.error("Error loading pie chart:", error);
-        });
-}
-
 </script>
 </body>
 </html>

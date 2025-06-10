@@ -7,7 +7,6 @@ import com.google.firebase.cloud.FirestoreClient;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-import com.google.cloud.firestore.QueryDocumentSnapshot;
 
 import java.io.IOException;
 import java.util.*;
@@ -34,29 +33,41 @@ public class chartPieDataServlet extends HttpServlet {
         Map<String, Double> activityTimeMap = new LinkedHashMap<>();
 
         try {
-            ApiFuture<QuerySnapshot> future = db.collection("ActivityAssessment")
+            CollectionReference assessments = db.collection("ActivityAssessment");
+
+            ApiFuture<QuerySnapshot> future = assessments
                 .whereEqualTo("studentId", studentId)
                 .get();
 
             List<QueryDocumentSnapshot> documents = future.get().getDocuments();
 
-            for (DocumentSnapshot doc : documents) {
+            for (QueryDocumentSnapshot doc : documents) {
                 Timestamp ts = doc.getTimestamp("timestamp");
                 if (ts != null) {
                     String docDate = new java.text.SimpleDateFormat("yyyy-MM-dd").format(ts.toDate());
                     if (!docDate.equals(selectedDate)) continue;
                 }
 
-                String activityName = doc.getString("activityName");
-                Number timeToComplete = (Number) doc.get("timeToComplete");
+                String activityId = doc.getString("activityId");
 
-                if (activityName != null && timeToComplete != null) {
-                    activityTimeMap.put(
-                        activityName,
-                        activityTimeMap.getOrDefault(activityName, 0.0) + timeToComplete.doubleValue()
-                    );
+                if (activityId != null) {
+                    DocumentSnapshot activityDoc = db.collection("dailyActivities").document(activityId).get().get();
+                    String activityName = activityDoc.getString("name");
+                    Map<String, Object> achievement = (Map<String, Object>) doc.get("achievement");
+                    if (achievement != null) {
+                        Number timeToComplete = (Number) achievement.get("timeToComplete");
+
+                        if (activityName != null && timeToComplete != null) {
+                            activityTimeMap.put(
+                                activityName,
+                                activityTimeMap.getOrDefault(activityName, 0.0) + timeToComplete.doubleValue()
+                            );
+                        }
+                    }
                 }
             }
+
+            System.out.println("Pie chart data: " + activityTimeMap.toString()); // ✅ Debug
 
             JSONObject json = new JSONObject(activityTimeMap);
             response.setContentType("application/json");
@@ -68,4 +79,3 @@ public class chartPieDataServlet extends HttpServlet {
         }
     }
 }
-

@@ -197,13 +197,13 @@
         <label for="teacherComment">Teacher Comment:</label>
         <textarea name="teacherComment" id="teacherComment" rows="4" placeholder="Write your observation here..." required></textarea>
 
-        <label for="timeToComplete">Time to Complete:</label>
+        <label for="timeToComplete">Time to Complete (in minutes):</label>
         <select name="timeToComplete" id="timeToComplete" required>
             <option value="">-- Select Duration --</option>
-            <option value="5 minutes">5 minutes</option>
-            <option value="10 minutes">10 minutes</option>
-            <option value="15 minutes">15 minutes</option>
-            <option value="20+ minutes">20+ minutes</option>
+            <option value="5">5 minutes</option>
+            <option value="10">10 minutes</option>
+            <option value="15">15 minutes</option>
+            <option value="20">20+ minutes</option>
         </select>
 
         <button type="submit">Submit Assessment</button>

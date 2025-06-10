@@ -1,7 +1,5 @@
 com\example\util\servlet\checkChildServlet.class
-com\example\util\servlet\submitActivitySummaryServlet.class
 com\example\util\FirebaseInitializer.class
-com\example\util\servlet\QueryDocumentSnapshot.class
 com\example\util\servlet\literacyProgressServlet.class
 com\example\util\servlet\registerChildServlet.class
 com\example\util\servlet\updateActivityServlet.class
@@ -14,11 +12,9 @@ com\example\util\servlet\teacherDashboardServlet.class
 com\example\util\servlet\selectStudentServlet.class
 com\example\util\servlet\assessmentServlet.class
 com\example\util\servlet\attendanceServlet.class
-com\example\util\servlet\submitPhysicalProgressServlet.class
 com\example\util\servlet\submitActivityServlet.class
 com\example\util\servlet\loginServlet.class
 com\example\util\servlet\redirectToAssessmentServlet.class
 com\example\util\servlet\submitProgressServlet.class
 com\example\util\servlet\registerParentServlet.class
-com\example\util\servlet\submitLiteracyProgressServlet.class
 com\example\util\servlet\chartDataServlet.class

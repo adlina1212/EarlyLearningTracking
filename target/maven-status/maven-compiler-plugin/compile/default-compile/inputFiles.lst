@@ -1,7 +1,6 @@
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\literacyProgressServlet.java
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\logoutServlet.java
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\FirebaseInitializer.java
-C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\submitPhysicalProgressServlet.java
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\assessmentServlet.java
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\parentDashboardServlet.java
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\loginServlet.java
@@ -11,12 +10,9 @@ C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\uti
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\chartPieDataServlet.java
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\attendanceServlet.java
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\checkChildServlet.java
-C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\submitLiteracyProgressServlet.java
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\profileServlet.java
-C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\submitActivitySummaryServlet.java
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\selectStudentServlet.java
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\submitProgressServlet.java
-C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\QueryDocumentSnapshot.java
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\physicalProgressServlet.java
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\registerChildServlet.java
 C:\Users\Adlina\JavaProjects\earlylearningtracking\src\main\java\com\example\util\servlet\redirectToAssessmentServlet.java
