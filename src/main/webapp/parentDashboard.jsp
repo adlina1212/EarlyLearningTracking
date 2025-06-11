@@ -172,14 +172,8 @@
                     <label for="datePicker" class="form-label">Select Date:</label>
                     <input type="date" id="datePicker" name="datePicker" class="form-control" required>
                 </div>
-                <button onclick="loadChartData(); loadPieChartData();" class="btn btn-primary">Load Progress</button>
-
-                <div id="chartsContainer" class="chart-container mt-4">
-                    <div>
-                        <h3 style="margin-top: 40px;"></h3>
-                        <canvas id="activityTimePieChart" width="800" height="400"></canvas>
-                    </div>
-                </div>
+                <button onclick="loadChartData();" class="btn btn-primary">Load Progress</button>
+                <div id="chartsContainer" class="chart-container mt-4"></div>
             </div>
         </div>
     </div>
@@ -208,10 +202,13 @@
 
         fetch('chartData?date=' + date + '&studentId=' + studentId)
             .then(response => response.json())
-            .then(data => {
+            .then(result => {
+                const barData = result.barChart;
+                const pieData = result.pieChart;
                 const container = document.getElementById('chartsContainer');
+                container.innerHTML = "";
 
-                data.forEach((activity, index) => {
+                barData.forEach((activity, index) => {
                     const literacyLabels = Object.keys(activity.literacy || {});
                     const literacyValues = Object.values(activity.literacy || {});
                     const physicalLabels = Object.keys(activity.physical || {});
@@ -285,47 +282,49 @@
                         });
                     }
                 });
+
+                if (Object.keys(pieData).length > 0) {
+                    const pieContainer = document.createElement('div');
+                    pieContainer.style.marginTop = "50px";
+
+                    const pieTitle = document.createElement('h3');
+                    pieTitle.textContent = "Time Duration Per Activity";
+                    pieContainer.appendChild(pieTitle);
+
+                    const pieCanvas = document.createElement('canvas');
+                    pieCanvas.id = "activityTimePieChart";
+                    pieCanvas.width = 400;
+                    pieCanvas.height = 200;
+                    pieContainer.appendChild(pieCanvas);
+
+                    container.appendChild(pieContainer);
+
+                    const ctx = pieCanvas.getContext('2d');
+                    if (pieInstance) pieInstance.destroy();
+                    pieInstance = new Chart(ctx, {
+                        type: 'pie',
+                        data: {
+                            labels: Object.keys(pieData),
+                            datasets: [{
+                                label: 'Time Duration by Activity',
+                                data: Object.values(pieData),
+                                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            plugins: {
+                                legend: {
+                                    position: 'bottom'
+                                }
+                            }
+                        }
+                    });
+                }
             })
             .catch(error => {
                 console.error("Error loading chart data:", error);
                 alert("Failed to load chart data.");
-            });
-    }
-
-    function loadPieChartData() {
-        const date = document.getElementById('datePicker').value;
-        const studentId = document.getElementById('studentId').value;
-
-        fetch(`chartPieData?studentId=${studentId}&date=${date}`)
-            .then(response => response.json())
-            .then(data => {
-                const labels = Object.keys(data);
-                const values = Object.values(data);
-
-                const ctx = document.getElementById('activityTimePieChart').getContext('2d');
-                if (pieInstance) pieInstance.destroy();
-                pieInstance = new Chart(ctx, {
-                    type: 'pie',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            label: 'Time Duration by Activity',
-                            data: values,
-                            backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'bottom'
-                            }
-                        }
-                    }
-                });
-            })
-            .catch(error => {
-                console.error("Error loading pie chart:", error);
             });
     }
 </script>

@@ -16,8 +16,6 @@ import java.util.concurrent.ExecutionException;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-
-
 @WebServlet("/chartData")
 public class chartDataServlet extends HttpServlet {
 
@@ -36,6 +34,7 @@ public class chartDataServlet extends HttpServlet {
 
         Firestore db = FirestoreClient.getFirestore();
         List<JSONObject> activityList = new ArrayList<>();
+        Map<String, Double> pieDataMap = new LinkedHashMap<>();
 
         try {
             CollectionReference assessments = db.collection("ActivityAssessment");
@@ -60,6 +59,9 @@ public class chartDataServlet extends HttpServlet {
                     activityName = activityDoc.getString("name");
                 }
 
+                System.out.println("activityId in document: " + activityId);
+                System.out.println("Activity Name Found bar: " + activityName);
+
                 JSONObject activityJson = new JSONObject();
                 activityJson.put("activityId", activityId);
                 activityJson.put("activityName", activityName);
@@ -82,6 +84,14 @@ public class chartDataServlet extends HttpServlet {
                             physicalJson.put(key, Integer.parseInt(physical.get(key).toString()));
                         }
                     }
+
+                    Number timeToComplete = (Number) achievement.get("timeToComplete");
+                    if (activityName != null && timeToComplete != null) {
+                        pieDataMap.put(
+                            activityName,
+                            pieDataMap.getOrDefault(activityName, 0.0) + timeToComplete.doubleValue()
+                        );
+                    }
                 }
 
                 activityJson.put("literacy", literacyJson);
@@ -96,10 +106,13 @@ public class chartDataServlet extends HttpServlet {
             return;
         }
 
+        JSONObject resultJson = new JSONObject();
+        resultJson.put("barChart", activityList);
+        resultJson.put("pieChart", new JSONObject(pieDataMap));
+
         response.setContentType("application/json");
         PrintWriter out = response.getWriter();
-        out.print(activityList.toString());
+        out.print(resultJson.toString());
         out.flush();
     }
 }
-
