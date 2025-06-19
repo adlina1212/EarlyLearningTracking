@@ -1,0 +1,104 @@
+body {
+    margin: 0;
+    background: linear-gradient(to right, #f3e8ff, #e9d5ff);
+    font-family: 'Segoe UI', sans-serif;
+    padding: 40px 20px;
+}
+
+.wrapper {
+    max-width: 1000px;
+    margin: auto;
+}
+
+.card {
+    display: flex;
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+}
+
+.left-panel {
+    flex: 1;
+    background: #ede9fe;
+    padding: 30px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.left-panel img {
+    width: 80%;
+    margin: auto;
+    margin-bottom: 20px;
+}
+
+.left-panel h3 {
+    color: #6b21a8;
+    margin: 10px 0 5px;
+}
+
+.left-panel p {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.right-panel {
+    flex: 1.5;
+    padding: 30px 40px;
+}
+
+h2 {
+    text-align: center;
+    color: #7c3aed;
+    margin-bottom: 20px;
+}
+
+label {
+    font-weight: 600;
+    display: block;
+    margin-top: 15px;
+    color: #444;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px 12px;
+    margin-top: 6px;
+    border: 1px solid #ddd6fe;
+    border-radius: 10px;
+    transition: 0.3s;
+}
+
+input:focus, select:focus {
+    border-color: #c084fc;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(192, 132, 252, 0.2);
+}
+
+.row {
+    display: flex;
+    gap: 20px;
+}
+
+.row > div {
+    flex: 1;
+}
+
+button {
+    margin-top: 30px;
+    width: 100%;
+    padding: 14px;
+    background-color: #c084fc;
+    color: white;
+    font-weight: bold;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+}
+
+button:hover {
+    background-color: #a855f7;
+}

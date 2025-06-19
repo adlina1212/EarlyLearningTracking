@@ -15,6 +15,7 @@
         <a href="teacherDashboard">Home</a>
         <a href="profile">Profile</a>
         <a href="assessment">Assessment</a>
+        <a href="studentReport">Student Report</a> <!-- New Link -->
         <a href="logout">Logout</a>
     </nav>
 </div>

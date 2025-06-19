@@ -1,113 +1,140 @@
 package com.example.util.servlet;
 
 import com.google.api.core.ApiFuture;
+import com.google.cloud.Timestamp;
 import com.google.cloud.firestore.*;
 import com.google.firebase.cloud.FirestoreClient;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
-import org.json.JSONArray;
-import org.json.JSONObject;
-import com.google.cloud.Timestamp;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
-@WebServlet("/generateReportData")
+@WebServlet("/studentReport")
 public class studentReportServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
-            throws ServletException, IOException {
+        throws ServletException, IOException {
 
-        String studentId = request.getParameter("studentId");
-
-        if (studentId == null || studentId.isEmpty()) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write("Missing studentId");
-            return;
-        }
+        HttpSession session = request.getSession(false);
+        String teacherName = session != null ? (String) session.getAttribute("username") : "Unknown";
 
         Firestore db = FirestoreClient.getFirestore();
 
-        try {
-            DocumentSnapshot studentDoc = db.collection("student").document(studentId).get().get();
+        String studentId = request.getParameter("studentId");
+        String startDate = request.getParameter("startDate");
+        String endDate = request.getParameter("endDate");
 
-            if (!studentDoc.exists()) {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                response.getWriter().write("Student not found");
+        List<Map<String, String>> studentList = new ArrayList<>();
+        try {
+            for (DocumentSnapshot doc : db.collection("student").get().get().getDocuments()) {
+                Map<String, String> s = new HashMap<>();
+                s.put("id", doc.getId());
+                s.put("name", doc.getString("fullName"));
+                studentList.add(s);
+            }
+            request.setAttribute("studentList", studentList);
+
+            if (studentId == null || studentId.isEmpty()) {
+                request.getRequestDispatcher("studentReport.jsp").forward(request, response);
                 return;
             }
 
-            Map<String, Object> studentProfile = new HashMap<>();
-            studentProfile.put("fullName", studentDoc.getString("fullName"));
-            studentProfile.put("dob", studentDoc.getString("dob"));
-            studentProfile.put("gender", studentDoc.getString("gender"));
-            studentProfile.put("photoUrl", studentDoc.getString("photoUrl"));
+            DocumentSnapshot studentDoc = db.collection("student").document(studentId).get().get();
+            if (!studentDoc.exists()) {
+                response.sendError(404, "Student not found");
+                return;
+            }
 
-            CollectionReference assessments = db.collection("ActivityAssessment");
-            ApiFuture<QuerySnapshot> future = assessments.whereEqualTo("studentId", studentId).get();
-            List<QueryDocumentSnapshot> documents = future.get().getDocuments();
+            String fullName = studentDoc.getString("fullName");
+            String dob = studentDoc.getString("dob");
+            String gender = studentDoc.getString("gender");
+            int age = studentDoc.getLong("age") != null ? studentDoc.getLong("age").intValue() : 0;
 
-            Map<String, List<Integer>> monthlyProgress = new HashMap<>();
-            monthlyProgress.put("Literacy", new ArrayList<>(Collections.nCopies(12, 0)));
-            monthlyProgress.put("Physical", new ArrayList<>(Collections.nCopies(12, 0)));
-            monthlyProgress.put("Cognitive", new ArrayList<>(Collections.nCopies(12, 0)));
+            Date rangeStart = null, rangeEnd = null;
+            try {
+                if (startDate != null && !startDate.isEmpty())
+                    rangeStart = new SimpleDateFormat("yyyy-MM-dd").parse(startDate);
+                if (endDate != null && !endDate.isEmpty())
+                    rangeEnd = new SimpleDateFormat("yyyy-MM-dd").parse(endDate);
+            } catch (Exception e) {
+                e.printStackTrace();
+                response.sendError(400, "Invalid date");
+                return;
+            }
 
-            Map<String, Integer> monthCounts = new HashMap<>();
+            List<QueryDocumentSnapshot> docs = db.collection("ActivityAssessment")
+                .whereEqualTo("studentId", studentId).get().get().getDocuments();
 
-            for (DocumentSnapshot doc : documents) {
+            // Group by activityId
+            Map<String, List<QueryDocumentSnapshot>> grouped = new HashMap<>();
+            for (QueryDocumentSnapshot doc : docs) {
                 Timestamp ts = doc.getTimestamp("timestamp");
                 if (ts == null) continue;
+                Date tsDate = ts.toDate();
+                boolean inRange = true;
+                if (rangeStart != null && tsDate.before(rangeStart)) inRange = false;
+                if (rangeEnd != null && tsDate.after(rangeEnd)) inRange = false;
+                if (!inRange) continue;
 
-                Calendar calendar = Calendar.getInstance();
-                calendar.setTime(ts.toDate());
-                int month = calendar.get(Calendar.MONTH); // 0-based index
+                String aid = doc.getString("activityId");
+                grouped.computeIfAbsent(aid, k -> new ArrayList<>()).add(doc);
+            }
 
-                Map<String, Object> achievement = (Map<String, Object>) doc.get("achievement");
-                if (achievement == null) continue;
+            // Build report data
+            List<Map<String, Object>> reportData = new ArrayList<>();
+            for (String aid : grouped.keySet()) {
+                List<QueryDocumentSnapshot> list = grouped.get(aid);
+                String activityName = list.get(0).getString("activityName");
 
-                for (String domain : Arrays.asList("literacy", "physical", "cognitive")) {
-                    Map<String, Object> domainData = (Map<String, Object>) achievement.get(domain);
-                    if (domainData != null) {
-                        int total = 0;
-                        for (Object val : domainData.values()) {
-                            try {
-                                total += Integer.parseInt(val.toString());
-                            } catch (NumberFormatException e) {
-                                continue;
+                Map<String, List<Integer>> literacy = new HashMap<>();
+                Map<String, List<Integer>> physical = new HashMap<>();
+                for (QueryDocumentSnapshot doc : list) {
+                    Map<String, Object> ach = (Map<String, Object>) doc.get("achievement");
+                    if (ach != null) {
+                        Map<String, Object> lit = (Map<String, Object>) ach.get("literacy");
+                        if (lit != null) {
+                            for (String k : lit.keySet()) {
+                                literacy.computeIfAbsent(k, x -> new ArrayList<>())
+                                        .add(Integer.parseInt(lit.get(k).toString()));
                             }
                         }
-                        List<Integer> domainList = monthlyProgress.get(domain.substring(0, 1).toUpperCase() + domain.substring(1));
-                        domainList.set(month, domainList.get(month) + total);
-                        monthCounts.put(domain + month, monthCounts.getOrDefault(domain + month, 0) + domainData.size());
+                        Map<String, Object> phy = (Map<String, Object>) ach.get("physical");
+                        if (phy != null) {
+                            for (String k : phy.keySet()) {
+                                physical.computeIfAbsent(k, x -> new ArrayList<>())
+                                        .add(Integer.parseInt(phy.get(k).toString()));
+                            }
+                        }
                     }
                 }
+                Map<String, Double> literacyAvg = new LinkedHashMap<>();
+                literacy.forEach((k, v) -> literacyAvg.put(k, v.stream().mapToInt(i -> i).average().orElse(0)));
+                Map<String, Double> physicalAvg = new LinkedHashMap<>();
+                physical.forEach((k, v) -> physicalAvg.put(k, v.stream().mapToInt(i -> i).average().orElse(0)));
+
+                Map<String, Object> one = new HashMap<>();
+                one.put("activityName", activityName);
+                one.put("literacyAvg", literacyAvg);
+                one.put("physicalAvg", physicalAvg);
+                reportData.add(one);
             }
 
-            for (String domain : monthlyProgress.keySet()) {
-                List<Integer> progressList = monthlyProgress.get(domain);
-                for (int i = 0; i < 12; i++) {
-                    String key = domain.toLowerCase() + i;
-                    int count = monthCounts.getOrDefault(key, 0);
-                    if (count > 0) {
-                        progressList.set(i, progressList.get(i) / count);
-                    }
-                }
-            }
+            request.setAttribute("fullName", fullName);
+            request.setAttribute("dob", dob);
+            request.setAttribute("gender", gender);
+            request.setAttribute("age", age);
+            request.setAttribute("teacherName", teacherName);
+            request.setAttribute("reportData", reportData);
 
-            JSONObject json = new JSONObject();
-            json.put("profile", studentProfile);
-            json.put("progress", monthlyProgress);
+            request.getRequestDispatcher("studentReport.jsp").forward(request, response);
 
-            response.setContentType("application/json");
-            PrintWriter out = response.getWriter();
-            out.print(json.toString());
-            out.flush();
-        } catch (Exception e) {
+        } catch (InterruptedException | ExecutionException e) {
             e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error generating report");
+            response.sendError(500, "Server error");
         }
     }
 }

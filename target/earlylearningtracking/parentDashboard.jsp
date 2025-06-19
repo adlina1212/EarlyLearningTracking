@@ -27,14 +27,13 @@
             margin: 0;
         }
         .sidebar {
-            position: fixed;
-            height: 100vh;
-            width: 210px;
-            background-color: #a1c6ea;
-            color: white;
-            padding: 20px;
-            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+            background: linear-gradient(to bottom, #a1c6ea, #6fa8dc);
+            padding: 25px 20px;
+            box-shadow: 2px 0 12px rgba(0, 0, 0, 0.15);
+            border-top-right-radius: 20px;
+            border-bottom-right-radius: 20px;
         }
+
         .sidebar h2 {
             font-size: 1.8em;
             margin-bottom: 30px;
@@ -62,6 +61,11 @@
             box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
             background-color: white;
             margin-bottom: 30px;
+            .card:hover {
+                transform: translateY(-5px);
+                transition: transform 0.3s ease;
+            }
+
         }
         .card h2 {
             font-size: 1.5em;
@@ -111,17 +115,28 @@
 <body>
 
 <div class="sidebar">
-    <h2>Parent Dashboard</h2>
+    <h2 style="display: flex; align-items: center; gap: 10px;">
+        <img src="img/parent.png" alt="Parent Icon" style="width: 32px; height: 32px;">
+        Parent Dashboard
+    </h2>
+
     <nav>
-        <a href="parentDashboard">Home</a>
-        <a href="profile">Profile</a>
-        <a href="logout">Logout</a>
+        <a href="parentDashboard">
+            <span class="material-icons" style="vertical-align: middle;">home</span> Home</a>
+        <a href="profile">
+            <span class="material-icons" style="vertical-align: middle;">person</span>Profile</a>
+        <a href="logout">
+            <span class="material-icons" style="vertical-align: middle;">logout</span>Logout</a>
     </nav>
 </div>
 
 <div class="main-content">
     <header class="header d-flex justify-content-between align-items-center mb-4">
-        <h1>Welcome, Parent</h1>
+        <h1 style="display: flex; align-items: center; gap: 10px;">
+            <img src="images/welcome.png" style="width: 28px; height: 28px;">
+            Welcome, Parent
+        </h1>
+
         <div>
             <a href="registerChild.jsp" class="btn btn-success btn-add-child">+ Register Child</a>
             <button onclick="window.location.href='logout'" class="btn btn-danger btn-logout">Logout</button>
@@ -293,8 +308,8 @@
 
                     const pieCanvas = document.createElement('canvas');
                     pieCanvas.id = "activityTimePieChart";
-                    pieCanvas.width = 800;
-                    pieCanvas.height = 400;
+                    pieCanvas.width = 400;
+                    pieCanvas.height = 200;
                     pieContainer.appendChild(pieCanvas);
 
                     container.appendChild(pieContainer);
