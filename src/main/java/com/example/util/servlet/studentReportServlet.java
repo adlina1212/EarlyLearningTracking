@@ -30,6 +30,8 @@ public class studentReportServlet extends HttpServlet {
 
         List<Map<String, String>> studentList = new ArrayList<>();
         try {
+            ApiFuture<QuerySnapshot> allStudentsFuture = db.collection("student").get();
+            List<QueryDocumentSnapshot> studentDocs = allStudentsFuture.get().getDocuments();
             for (DocumentSnapshot doc : db.collection("student").get().get().getDocuments()) {
                 Map<String, String> s = new HashMap<>();
                 s.put("id", doc.getId());
@@ -65,12 +67,12 @@ public class studentReportServlet extends HttpServlet {
                 response.sendError(400, "Invalid date");
                 return;
             }
-
+            // Get all assessments for this student
             List<QueryDocumentSnapshot> docs = db.collection("ActivityAssessment")
                 .whereEqualTo("studentId", studentId).get().get().getDocuments();
 
             // Group by activityId
-            Map<String, List<QueryDocumentSnapshot>> grouped = new HashMap<>();
+            Map<String, List<QueryDocumentSnapshot>> byActivity = new HashMap<>();
             for (QueryDocumentSnapshot doc : docs) {
                 Timestamp ts = doc.getTimestamp("timestamp");
                 if (ts == null) continue;
@@ -81,43 +83,44 @@ public class studentReportServlet extends HttpServlet {
                 if (!inRange) continue;
 
                 String aid = doc.getString("activityId");
-                grouped.computeIfAbsent(aid, k -> new ArrayList<>()).add(doc);
+                byActivity.computeIfAbsent(aid, k -> new ArrayList<>()).add(doc);
+            }
+
+            // Fetch activity names
+            Map<String, String> activityNames = new HashMap<>();
+            for (String aidKey : byActivity.keySet()) {
+                if (!"unknown".equals(aidKey)) {
+                    DocumentSnapshot act = db.collection("activity").document(aidKey).get().get();
+                    activityNames.put(aidKey, act.exists() ? act.getString("activityName") : "Unknown Activity");
+                } else {
+                    activityNames.put(aidKey, "Unknown Activity");
+                }
             }
 
             // Build report data
             List<Map<String, Object>> reportData = new ArrayList<>();
-            for (String aid : grouped.keySet()) {
-                List<QueryDocumentSnapshot> list = grouped.get(aid);
-                String activityName = list.get(0).getString("activityName");
+            for (String aid : byActivity.keySet()) {
+                List<QueryDocumentSnapshot> actDocs = byActivity.get(aid);
+                //String activityName = list.get(0).getString("activityName");
 
-                Map<String, List<Integer>> literacy = new HashMap<>();
-                Map<String, List<Integer>> physical = new HashMap<>();
-                for (QueryDocumentSnapshot doc : list) {
+                Map<String, List<Integer>> lit = new HashMap<>();
+                Map<String, List<Integer>> phy = new HashMap<>();
+                for (QueryDocumentSnapshot doc : actDocs) {
                     Map<String, Object> ach = (Map<String, Object>) doc.get("achievement");
                     if (ach != null) {
-                        Map<String, Object> lit = (Map<String, Object>) ach.get("literacy");
-                        if (lit != null) {
-                            for (String k : lit.keySet()) {
-                                literacy.computeIfAbsent(k, x -> new ArrayList<>())
-                                        .add(Integer.parseInt(lit.get(k).toString()));
-                            }
-                        }
-                        Map<String, Object> phy = (Map<String, Object>) ach.get("physical");
-                        if (phy != null) {
-                            for (String k : phy.keySet()) {
-                                physical.computeIfAbsent(k, x -> new ArrayList<>())
-                                        .add(Integer.parseInt(phy.get(k).toString()));
-                            }
-                        }
+                        Map<String, Object> l = (Map<String, Object>) ach.get("literacy");
+                        if (l != null) l.forEach((k,v) -> lit.computeIfAbsent(k, kk -> new ArrayList<>()).add(Integer.parseInt(v.toString())));
+                        Map<String, Object> p = (Map<String, Object>) ach.get("physical");
+                        if (p != null) p.forEach((k,v) -> phy.computeIfAbsent(k, kk -> new ArrayList<>()).add(Integer.parseInt(v.toString())));
                     }
                 }
                 Map<String, Double> literacyAvg = new LinkedHashMap<>();
-                literacy.forEach((k, v) -> literacyAvg.put(k, v.stream().mapToInt(i -> i).average().orElse(0)));
+                lit.forEach((k, v) -> literacyAvg.put(k, v.stream().mapToInt(i -> i).average().orElse(0)));
                 Map<String, Double> physicalAvg = new LinkedHashMap<>();
-                physical.forEach((k, v) -> physicalAvg.put(k, v.stream().mapToInt(i -> i).average().orElse(0)));
+                phy.forEach((k, v) -> physicalAvg.put(k, v.stream().mapToInt(i -> i).average().orElse(0)));
 
                 Map<String, Object> one = new HashMap<>();
-                one.put("activityName", activityName);
+                one.put("activityName", activityNames.getOrDefault(aid, "Activity"));
                 one.put("literacyAvg", literacyAvg);
                 one.put("physicalAvg", physicalAvg);
                 reportData.add(one);
