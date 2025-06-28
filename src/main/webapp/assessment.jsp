@@ -6,92 +6,204 @@
 <head>
     <meta charset="UTF-8">
     <title>Assessment</title>
-    <link rel="stylesheet" href="css/dashboard.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <style>
-        .student-list { list-style: none; padding: 0; }
-        .student-list li { margin: 10px 0; padding: 8px; border: 1px solid #ccc; border-radius: 5px; }
-        .present a { color: blue; text-decoration: underline; cursor: pointer; }
-        .absent { color: grey; pointer-events: none; }
-        .scale-select { margin-left: 20px; }
-
-        #showFormBtn {
-            background-color: #007bff;
-            color: white;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f8f6fc;
         }
 
-        #showFormBtn:hover {
-            background-color: #0056b3;
+        .top-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 50px;
+            background: linear-gradient(to right, #b295d9, #c7aefc);
+            color: #fff;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .top-nav .logo {
+            font-size: 24px;
+            font-weight: 700;
+        }
+
+        .top-nav .logo span {
+            color: #fff;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 25px;
+            margin: 0;
+        }
+
+        .nav-links li a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .nav-links li a:hover {
+            text-decoration: underline;
+        }
+
+        @media screen and (max-width: 768px) {
+            .top-nav {
+                flex-direction: column;
+                align-items: flex-start;
+                padding: 20px;
+            }
+            .nav-links {
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 10px;
+            }
+        } 
+
+        .container {
+            max-width: 1000px;
+            margin: 40px auto;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05);
+        }
+
+        h1, h2 {
+            color: #5e3dad;
+        }
+
+        button, input[type="submit"] {
+            background-color: #a57ffa;
+            color: white;
+            padding: 8px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        button:hover, input[type="submit"]:hover {
+            background-color: #8e66f4;
         }
 
         #activityFormContainer {
-            display: none;
-            border: 1px solid #ccc;
+            background-color: #f9f7fe;
             padding: 20px;
+            border-radius: 12px;
             margin-top: 20px;
-            border-radius: 10px;
-            background-color: #f9f9f9;
         }
 
-        form label {
-            display: block;
-            margin-top: 10px;
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        thead {
+            background-color: #a57ffa;
+            color: white;
+        }
+
+        td, th {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tbody tr:nth-child(even) {
+            background-color: #f2eafa;
         }
 
         form input, form textarea, form select {
             width: 100%;
             padding: 8px;
             margin-top: 4px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
         }
 
-        form button[type="submit"] {
-            margin-top: 15px;
-            background-color: #28a745;
-            color: white;
-            padding: 10px 14px;
+        .top-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .edit-btns form {
+            display: inline-block;
+        }
+
+        .edit-btns button {
+            margin-right: 5px;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-box {
+            background: #fff;
+            padding: 30px;
+            width: 90%;
+            max-width: 500px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            position: relative;
+        }
+
+        .modal-box h2 {
+            margin-top: 0;
+            color: #5e3dad;
+        }
+
+        .modal-box .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 14px;
+            font-size: 20px;
+            background: none;
             border: none;
-            border-radius: 5px;
+            color: #888;
             cursor: pointer;
         }
 
-        form button[type="submit"]:hover {
-            background-color: #218838;
-        }
-        
-        table {
-            font-family: Arial, sans-serif;
-        }
-
-        table thead {
-            background-color: #007bff;
-            color: white;
-        }
-
-        table tbody tr:nth-child(even) {
-            background-color: #f2f2f2;
+        .modal-box .close-btn:hover {
+            color: #000;
         }
     </style>
 </head>
 <body>
-<div class="sidebar">
-    <h2>Dashboard</h2>
-    <nav>
-        <a href="teacherDashboard">Home</a>
-        <a href="profile">Profile</a>
-        <a href="assessment">Assessment</a>
-        <a href="logout">Logout</a>
-    </nav>
-</div>
+<!-- Top Navigation -->
+<!-- Top Navigation Bar -->
+<nav class="top-nav">
+    <div class="logo">teacher<span>.</span></div>
+    <ul class="nav-links">
+        <li><a href="teacherDashboard">Home</a></li>
+        <li><a href="profile">Profile</a></li>
+        <li><a href="assessment">Assessment</a></li>
+        <li><a href="studentReport">Student Report</a></li>
+        <li><a href="logout">Logout</a></li>
+    </ul>
+</nav>
 
-<div class="main-content">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
+<div class="container">
+    <div class="top-section">
         <h1>Activity List</h1>
         <button id="showFormBtn">+ Add Activity</button>
     </div>
-
     <%
         List<Map<String, Object>> activityList = (List<Map<String, Object>>) request.getAttribute("activities");
     %>
@@ -100,7 +212,7 @@
         <% if (activityList == null || activityList.isEmpty()) { %>
             <p>No activity found.</p>
         <% } else { %>
-            <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+            <table >
                 <thead>
                     <tr>
                         <th>#</th>
@@ -158,7 +270,7 @@
                     </form>
                     <form action="deleteActivity" method="POST" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this activity?');">
                         <input type="hidden" name="activityId" value="<%= activityId %>">
-                        <button type="submit">Delete</button>
+                        <button type="submit" style="background-color: #f05b5b;">Delete</button>
                     </form>
                 </td>
             <% } %>
@@ -169,7 +281,10 @@
         <% } %>
     </div>
 
-    <div id="activityFormContainer">
+    <!-- Popup Modal for Add Activity -->
+<div class="modal-overlay" id="activityModal">
+    <div class="modal-box">
+        <button class="close-btn" onclick="closeModal()">×</button>
         <h2>Add New Activity</h2>
         <form action="submitActivity" method="post">
             <label for="activityDate">Date:</label>
@@ -184,18 +299,27 @@
             <button type="submit">Submit Activity</button>
         </form>
     </div>
+</div>
 
     <hr>
 </div>
 
 <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const showFormBtn = document.getElementById("showFormBtn");
-        const formContainer = document.getElementById("activityFormContainer");
+    const modal = document.getElementById("activityModal");
 
-        showFormBtn.addEventListener("click", () => {
-            formContainer.style.display = formContainer.style.display === "none" ? "block" : "none";
-        });
+    document.getElementById("showFormBtn").addEventListener("click", function () {
+        modal.style.display = "flex";
+    });
+
+    function closeModal() {
+        modal.style.display = "none";
+    }
+
+    // Optional: Close modal if user clicks outside the modal box
+    window.addEventListener("click", function (event) {
+        if (event.target === modal) {
+            modal.style.display = "none";
+        }
     });
 </script>
 

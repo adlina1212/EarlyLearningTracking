@@ -32,7 +32,7 @@ public class studentReportServlet extends HttpServlet {
         try {
             ApiFuture<QuerySnapshot> allStudentsFuture = db.collection("student").get();
             List<QueryDocumentSnapshot> studentDocs = allStudentsFuture.get().getDocuments();
-            for (DocumentSnapshot doc : db.collection("student").get().get().getDocuments()) {
+            for (DocumentSnapshot doc : studentDocs) {
                 Map<String, String> s = new HashMap<>();
                 s.put("id", doc.getId());
                 s.put("name", doc.getString("fullName"));
@@ -71,8 +71,10 @@ public class studentReportServlet extends HttpServlet {
             List<QueryDocumentSnapshot> docs = db.collection("ActivityAssessment")
                 .whereEqualTo("studentId", studentId).get().get().getDocuments();
 
+            Map<String, List<Integer>> literacy = new HashMap<>();
+            Map<String, List<Integer>> physical = new HashMap<>();
             // Group by activityId
-            Map<String, List<QueryDocumentSnapshot>> byActivity = new HashMap<>();
+            //Map<String, List<QueryDocumentSnapshot>> byActivity = new HashMap<>();
             for (QueryDocumentSnapshot doc : docs) {
                 Timestamp ts = doc.getTimestamp("timestamp");
                 if (ts == null) continue;
@@ -82,56 +84,46 @@ public class studentReportServlet extends HttpServlet {
                 if (rangeEnd != null && tsDate.after(rangeEnd)) inRange = false;
                 if (!inRange) continue;
 
-                String aid = doc.getString("activityId");
-                byActivity.computeIfAbsent(aid, k -> new ArrayList<>()).add(doc);
-            }
+                Map<String, Object> achievement = (Map<String, Object>) doc.get("achievement");
+                if (achievement == null) continue;
 
-            // Fetch activity names
-            Map<String, String> activityNames = new HashMap<>();
-            for (String aidKey : byActivity.keySet()) {
-                if (!"unknown".equals(aidKey)) {
-                    DocumentSnapshot act = db.collection("activity").document(aidKey).get().get();
-                    activityNames.put(aidKey, act.exists() ? act.getString("activityName") : "Unknown Activity");
-                } else {
-                    activityNames.put(aidKey, "Unknown Activity");
-                }
-            }
-
-            // Build report data
-            List<Map<String, Object>> reportData = new ArrayList<>();
-            for (String aid : byActivity.keySet()) {
-                List<QueryDocumentSnapshot> actDocs = byActivity.get(aid);
-                //String activityName = list.get(0).getString("activityName");
-
-                Map<String, List<Integer>> lit = new HashMap<>();
-                Map<String, List<Integer>> phy = new HashMap<>();
-                for (QueryDocumentSnapshot doc : actDocs) {
-                    Map<String, Object> ach = (Map<String, Object>) doc.get("achievement");
-                    if (ach != null) {
-                        Map<String, Object> l = (Map<String, Object>) ach.get("literacy");
-                        if (l != null) l.forEach((k,v) -> lit.computeIfAbsent(k, kk -> new ArrayList<>()).add(Integer.parseInt(v.toString())));
-                        Map<String, Object> p = (Map<String, Object>) ach.get("physical");
-                        if (p != null) p.forEach((k,v) -> phy.computeIfAbsent(k, kk -> new ArrayList<>()).add(Integer.parseInt(v.toString())));
+                Map<String, Object> lit = (Map<String, Object>) achievement.get("literacy");
+                if (lit != null) {
+                    for (Map.Entry<String, Object> entry : lit.entrySet()) {
+                        literacy.computeIfAbsent(entry.getKey(), k -> new ArrayList<>())
+                                .add(Integer.parseInt(entry.getValue().toString()));
                     }
                 }
-                Map<String, Double> literacyAvg = new LinkedHashMap<>();
-                lit.forEach((k, v) -> literacyAvg.put(k, v.stream().mapToInt(i -> i).average().orElse(0)));
-                Map<String, Double> physicalAvg = new LinkedHashMap<>();
-                phy.forEach((k, v) -> physicalAvg.put(k, v.stream().mapToInt(i -> i).average().orElse(0)));
 
-                Map<String, Object> one = new HashMap<>();
-                one.put("activityName", activityNames.getOrDefault(aid, "Activity"));
-                one.put("literacyAvg", literacyAvg);
-                one.put("physicalAvg", physicalAvg);
-                reportData.add(one);
+                Map<String, Object> phy = (Map<String, Object>) achievement.get("physical");
+                if (phy != null) {
+                    for (Map.Entry<String, Object> entry : phy.entrySet()) {
+                        physical.computeIfAbsent(entry.getKey(), k -> new ArrayList<>())
+                                .add(Integer.parseInt(entry.getValue().toString()));
+                    }
+                }
             }
 
+            Map<String, Double> literacyAvg = new LinkedHashMap<>();
+            for (Map.Entry<String, List<Integer>> entry : literacy.entrySet()) {
+                double avg = entry.getValue().stream().mapToInt(Integer::intValue).average().orElse(0);
+                literacyAvg.put(entry.getKey(), avg);
+            }
+
+            Map<String, Double> physicalAvg = new LinkedHashMap<>();
+            for (Map.Entry<String, List<Integer>> entry : physical.entrySet()) {
+                double avg = entry.getValue().stream().mapToInt(Integer::intValue).average().orElse(0);
+                physicalAvg.put(entry.getKey(), avg);
+            }
+
+            // Set attributes for JSP
             request.setAttribute("fullName", fullName);
             request.setAttribute("dob", dob);
             request.setAttribute("gender", gender);
             request.setAttribute("age", age);
             request.setAttribute("teacherName", teacherName);
-            request.setAttribute("reportData", reportData);
+            request.setAttribute("literacyAvg", literacyAvg);
+            request.setAttribute("physicalAvg", physicalAvg);
 
             request.getRequestDispatcher("studentReport.jsp").forward(request, response);
 

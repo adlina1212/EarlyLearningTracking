@@ -16,103 +16,134 @@
     <link rel="stylesheet" type="text/css" href="css/physicalProgress.css">
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
 <style>
-        @keyframes gradientAnimation {
-            0% {
-                background: #ff9a9e;
-            }
-            50% {
-                background: #fad0c4;
-            }
-            100% {
-                background: #fbc2eb;
-            }
+        body {
+            margin: 0;
+            font-family: 'Poppins', sans-serif;
+            background-color: #f6f3fc;
         }
 
-        body {
-            animation: gradientAnimation 10s ease infinite;
-            font-family: 'Poppins', sans-serif;
+        /* Navigation */
+        .top-nav {
+            background: linear-gradient(to right, #a993f5, #c3b5f8);
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: white;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .logo span {
+            color: #ffffff;
+        }
+
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 25px;
             margin: 0;
             padding: 0;
         }
 
-        .dashboard {
-            max-width: 900px;
-            margin: auto;
-            padding: 20px;
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            font-size: 16px;
         }
 
-        .student-info, .summary-box {
-            background-color: #fff;
+        .nav-links a:hover {
+            text-decoration: underline;
+        }
+
+        .dashboard {
+            max-width: 1000px;
+            margin: 40px auto;
             padding: 20px;
+            background: #fff;
             border-radius: 12px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
-            margin-bottom: 20px;
+            box-shadow: 0 6px 12px rgba(0,0,0,0.05);
         }
 
         h1, h2 {
-            color: #2c3e50;
+            color: #5e3dad;
+            margin-top: 30px;
+        }
+
+        .student-info, .summary-box {
+            background-color: #f9f7fe;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
-            background: #fff;
-            border-radius: 8px;
+            background: white;
+            border-radius: 10px;
             overflow: hidden;
             box-shadow: 0 2px 6px rgba(0,0,0,0.05);
         }
 
-        table th, table td {
-            padding: 10px;
-            text-align: center;
-            border-bottom: 1px solid #ddd;
-        }
-
         table th {
-            background-color: #3498db;
-            color: #fff;
+            background-color: #a57ffa;
+            color: white;
+            padding: 12px;
         }
 
-        table tr:hover {
-            background-color: #f0f8ff;
+        table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        table tr:nth-child(even) {
+            background-color: #f2eafa;
         }
 
         input[type="radio"] {
             transform: scale(1.2);
         }
 
-        textarea, input[type="text"], input[type="date"] {
+        textarea, select, input[type="text"], input[type="date"] {
             width: 100%;
-            padding: 8px 12px;
+            padding: 10px;
             margin-top: 8px;
             border-radius: 6px;
             border: 1px solid #ccc;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        label {
+            margin-top: 20px;
+            display: block;
+            font-weight: 500;
+            color: #333;
         }
 
         button[type="submit"] {
-            background-color: #28a745;
-            color: #fff;
+            margin-top: 30px;
+            background-color: #a57ffa;
+            color: white;
             padding: 12px 20px;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             font-weight: bold;
+            font-size: 16px;
             cursor: pointer;
-            margin-top: 20px;
+            transition: background-color 0.3s ease;
         }
 
         button[type="submit"]:hover {
-            background-color: #218838;
+            background-color: #8e66f4;
         }
 
-        @media (max-width: 600px) {
-            .dashboard {
-                padding: 10px;
-            }
-            table {
-                font-size: 14px;
-            }
-        }
         .justify-text {
             text-align: justify;
         }

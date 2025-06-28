@@ -56,7 +56,10 @@ public class chartDataServlet extends HttpServlet {
                 String activityName = "Unnamed Activity";
                 if (activityId != null) {
                     DocumentSnapshot activityDoc = db.collection("dailyActivities").document(activityId).get().get();
-                    activityName = activityDoc.getString("name");
+                    String fetchedName = activityDoc.getString("name");
+                    if (fetchedName != null && !fetchedName.isEmpty()) {
+                        activityName = fetchedName;
+                    }
                 }
 
                 System.out.println("activityId in document: " + activityId);
@@ -94,6 +97,9 @@ public class chartDataServlet extends HttpServlet {
                     }
                 }
 
+                
+                activityJson.put("activityId", activityId);
+                activityJson.put("activityName", activityName != null ? activityName : "Unnamed Activity");
                 activityJson.put("literacy", literacyJson);
                 activityJson.put("physical", physicalJson);
                 activityList.add(activityJson);
